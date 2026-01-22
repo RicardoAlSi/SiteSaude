@@ -12,3 +12,10 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model UserTest {
+  id String @id @default(uuid())
+  name String
+  sobrenome String?
+  idade Int
+}

@@ -6,4 +6,7 @@ const router = Router();
 // Example route
 router.get("/", users.index);
 
+
+
+
 export default router;

@@ -1,5 +1,6 @@
 import "dotenv";
 import express from "express";
+import apiRouter from "./api/routes/index.js"
 
 const app = express();
 const PORT = process.env.PORT || 7000;
@@ -7,7 +8,7 @@ const PORT = process.env.PORT || 7000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", (await import("./api/routes/index.js")).default);
+app.use("/api", apiRouter);
 
 app.listen(PORT, ()=>{
   console.log(`Server running on port ${PORT}`);
