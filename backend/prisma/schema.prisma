@@ -5,17 +5,96 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
+    provider = "postgresql"
 }
 
-model UserTest {
-  id String @id @default(uuid())
-  name String
-  sobrenome String?
-  idade Int
+enum StatusUrgencia {
+    URGENTE
+    MODERADO
+    BAIXO
+}
+
+enum StatusAtendimento {
+    AGENDADO
+    CONFIRMADO
+    CANCELADO
+    FINALIZADO
+}
+
+enum Role {
+    MEDICO
+    ATENDENTE
+    ADMIN
+}
+
+model Agenda {
+    id            String   @id @default(uuid())
+    horario_atend DateTime
+
+    statusUrgencia StatusUrgencia @default(BAIXO)
+    status         StatusAtendimento @default(AGENDADO)
+
+    pantId Int
+    docId  Int
+
+    paciente Pantient @relation(fields: [pantId], references: [id])
+    medico Doctor @relation(fields: [docId], references: [userId])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Users {
+    id         Int      @id @default(autoincrement())
+    nome       String   @db.VarChar(100)
+    cpf        String   @unique @db.VarChar(11)
+    nascimento DateTime
+    fone       String   @db.VarChar(11)
+    email      String   @unique
+    passwordHash   String   @db.VarChar(60) @map("password")
+
+    role Role
+
+    medico    Doctor?
+    atendente Attend?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Doctor {
+    userId        Int    @id
+    crm           String @unique
+    especialidade String
+
+    user Users @relation(fields: [userId], references: [id])
+
+    agendas Agenda[]
+}
+
+model Pantient {
+    id         Int      @id @default(autoincrement())
+    nome       String
+    cpf        String   @unique
+    nascimento DateTime
+    telefone   String
+    email      String?
+    cartaoSus  String   @unique
+
+    agendas Agenda[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Attend {
+    userId Int     @id
+    setor  String
+
+    user Users @relation(fields: [userId], references: [id])
 }

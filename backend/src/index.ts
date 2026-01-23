@@ -3,7 +3,7 @@ import express from "express";
 import apiRouter from "./api/routes/index.js"
 
 const app = express();
-const PORT = process.env.PORT || 7000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
