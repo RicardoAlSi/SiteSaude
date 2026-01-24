@@ -36,27 +36,27 @@ model Agenda {
     id            String   @id @default(uuid())
     horario_atend DateTime
 
-    statusUrgencia StatusUrgencia @default(BAIXO)
+    statusUrgencia StatusUrgencia    @default(BAIXO)
     status         StatusAtendimento @default(AGENDADO)
 
     pantId Int
     docId  Int
 
-    paciente Pantient @relation(fields: [pantId], references: [id])
-    medico Doctor @relation(fields: [docId], references: [userId])
+    paciente Patient @relation(fields: [pantId], references: [id])
+    medico   Doctor   @relation(fields: [docId], references: [userId])
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
 model Users {
-    id         Int      @id @default(autoincrement())
-    nome       String   @db.VarChar(100)
-    cpf        String   @unique @db.VarChar(11)
-    nascimento DateTime
-    fone       String   @db.VarChar(11)
-    email      String   @unique
-    passwordHash   String   @db.VarChar(60) @map("password")
+    id           Int      @id @default(autoincrement())
+    nome         String   @db.VarChar(100)
+    cpf          String   @unique @db.VarChar(11)
+    nascimento   DateTime
+    fone         String   @db.VarChar(11)
+    email        String   @unique
+    passwordHash String   @map("password") @db.VarChar(60)
 
     role Role
 
@@ -77,12 +77,12 @@ model Doctor {
     agendas Agenda[]
 }
 
-model Pantient {
+model Patient {
     id         Int      @id @default(autoincrement())
     nome       String
     cpf        String   @unique
     nascimento DateTime
-    telefone   String
+    fone       String
     email      String?
     cartaoSus  String   @unique
 
@@ -93,7 +93,7 @@ model Pantient {
 }
 
 model Attend {
-    userId Int     @id
+    userId Int    @id
     setor  String
 
     user Users @relation(fields: [userId], references: [id])

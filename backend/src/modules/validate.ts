@@ -65,8 +65,17 @@ const validation = {
     loginUser: function (data: unknown) {
 
         const schema = Joi.object({
-            email: Joi.string().email().required(),
-            password: Joi.string().min(8).pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{8,30}$/).required()
+            email: Joi.string().email().required()
+            .messages({
+                "string.email":"Email inválido",
+                "string.empty":"Email é obrigatório"
+            }),
+            password: Joi.string().min(8).required()
+            .messages({
+                "any.required":"Senha obrigatório",
+                "string.empty": "Senha está faltando",
+                "string.min": "Senha curta demais"
+            })
         })
 
         return schema.validate(data, {
@@ -74,8 +83,38 @@ const validation = {
             stripUnknown: true
         })
 
-    }
+    },
 
+    registerPantient: function (data: unknown) {
+
+        const schema = Joi.object({
+
+            nome: Joi.string().min(3).max(100).required(),
+
+            cpf: Joi.string().required().custom(validationCPF)
+                .messages({
+                    "any.invalid": "CPF inválido"
+                }),
+
+            cartaoSus: Joi.string().required().custom(validarCNS)
+            .messages({
+                "any.invalid": "Cartão do SUS inválido"
+            }),
+
+            nascimento: Joi.date().iso().required(),
+
+            email: Joi.string().email(),
+
+            fone: Joi.string().pattern(/^\(?\d{2}\)?\s?\d{4,5}-?\d{4}$/).required(),
+            
+        })
+
+        return schema.validate(data, {
+            abortEarly: false, 
+            stripUnknown: true
+        })
+
+    }
 
 }
 
@@ -88,6 +127,21 @@ function validationCPF(values: string, helpers: CustomHelpers) {
     }
     return cpfNormalized
 
+}
+
+function validarCNS(values: string, helpers: CustomHelpers) {
+    const cnsNormalized = values.replace(/\D/g, "")
+
+    if (!/^[1-2]\d{10}00[0-1]\d$|^[7-9]\d{14}$/.test(cnsNormalized)) {
+        return helpers.error("any.invalid")
+    }
+
+    let soma = 0
+    for (let i = 0; i < cnsNormalized.length; i++) {
+        soma += Number(cnsNormalized[i]) * (15 - i)
+    }
+
+    return cnsNormalized
 }
 
 export default validation

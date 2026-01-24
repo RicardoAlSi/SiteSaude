@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { prisma } from "../../lib/prisma.js"
 import { Role } from "../../../generated/prisma/index.js"
-import { error } from "node:console";
 import bcrypt from "bcryptjs";
 import validation from "../validate.js";
+import jwt from "jsonwebtoken"
 
 const users = {
 
@@ -125,12 +125,12 @@ const users = {
     registerUser: async function (req: Request, res: Response) {
 
         try {
-            
-            const {error, value} = validation.registerUser(req.body)
-            if(error){
-                return res.status(400).json({ error: error.details[0].message })
+
+            const { error, value } = validation.registerUser(req.body)
+            if (error) {
+                return res.status(400).json({ error: error.message })
             }
-            
+
             const { nome, cpf, nascimento, fone, email, password, role, crm, especialidade, setor } = value
 
             if (!Object.values(Role).includes(role)) {
@@ -138,7 +138,7 @@ const users = {
             }
 
             if (role == Role.ADMIN) {
-                return res.status(400).json({error: "Não é possivel criar ADMIN por cadastro público"})
+                return res.status(400).json({ error: "Não é possivel criar ADMIN por cadastro público" })
             }
 
             if (role === Role.MEDICO && (!crm || !especialidade)) {
@@ -150,7 +150,7 @@ const users = {
             })
             if (verifyEmail) {
                 return res.status(400).json({
-                    error: "Email already exists"
+                    error: "Email já cadastrado"
                 })
             }
 
@@ -189,7 +189,13 @@ const users = {
 
     loginUser: async function (req: Request, res: Response) {
         try {
-            const { email, password } = req.body
+
+            const { error, value } = validation.loginUser(req.body)
+            if (error) {
+                return res.status(400).json({ error: error.message, "a":"asdasdas" })
+            }
+
+            const { email, password } = value
 
             if (!email || !password) {
                 return res.status(400).json({ error: "Email ou senha incorretos" })
@@ -211,10 +217,18 @@ const users = {
                 return res.status(400).json({ error: "Email ou senha Incorretos" })
             }
 
+            const secretKey = process.env.JWT_TOKEN
+
+            if (!secretKey) {
+                return res.status(400).json({ error: "JWT_TOKEN não definido" })
+            }
+
+            const tokenUser = jwt.sign({ id: user.id, role: user.role, email: user.email }, secretKey, { expiresIn: "1h" })
+
+            res.header("authorization", tokenUser)
             res.json({
                 message: "Usuário logado com sucesso",
                 user: {
-                    id: user.id,
                     email: user.email,
                     role: user.role
                 }
@@ -223,10 +237,6 @@ const users = {
         } catch (error) {
             res.send(error)
         }
-    },
-
-    registerPant: async function (req: Request, res: Response) {
-
     }
 
 
