@@ -1,25 +1,34 @@
 import { Request, Response, NextFunction } from "express"
 import jwt from "jsonwebtoken"
+import { Role } from "../../../generated/prisma/index.js"
 
 function authToken(req: Request, res: Response, next: NextFunction) {
 
-    const authHeader = req.headers.authorization //retorna Bearer + token
+    const cookieToken = req.cookies.access_token
     const secretKey = process.env.JWT_TOKEN
 
-    if(!secretKey){
-        return res.status(400).json({error: "JWT_TOKEN não definido"})
+    if (!secretKey) {
+        return res.status(500).json({ error: "JWT_TOKEN não definido" })
     }
 
-    if (!authHeader) {
-        return res.status(400).json({ error: "Acesso negado" })
+    if (!cookieToken) {
+        return res.status(401).json({ error: "Acesso negado" })
     }
 
-    const [, token] = authHeader.split(" ") //Separa o Bearer e fica só o token
 
     try {
-        const userVerifed = jwt.verify(token, secretKey)
+        const userVerifed = jwt.verify(cookieToken, secretKey)
+
+        if (typeof userVerifed !== "object" || userVerifed === null) {
+            return res.status(401).json({ error: "Token Invalido" })
+        }
+
+        req.user = {
+            id: userVerifed.id as number,
+            role: userVerifed.role as Role
+        }
         next()
-    }catch(error){
+    } catch (error) {
         return res.status(400).json({ error: "Token inválido" })
     }
 }
